@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Booking System</title>
+
+    <!-- Flatpickr CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f9f9f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            width: 400px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        h1, h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        #time-slots, #booking-form {
+            display: none;
+        }
+
+        .time-slot {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 5px;
+            background: #eee;
+            color: #333;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .time-slot:hover {
+            background: #4caf50;
+            color: #fff;
+        }
+
+        .time-slot.selected {
+            background: #4caf50;
+            color: #fff;
+        }
+
+        form input, form button {
+            width: 100%;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        form button {
+            background: #4caf50;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+
+        form button:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Book Your Appointment</h1>
+
+        <!-- Step 1: Calendar -->
+        <div id="calendar-container">
+            <h2>Select a Date</h2>
+            <input type="text" id="booking-calendar" placeholder="Pick a date">
+        </div>
+
+        <!-- Step 2: Time Slots -->
+        <div id="time-slots">
+            <h2>Select a Time</h2>
+            <div id="time-slot-container">
+                <!-- Time slots will be dynamically loaded here -->
+            </div>
+        </div>
+
+        <!-- Step 3: Booking Form -->
+        <div id="booking-form">
+            <h2>Booking Details</h2>
+            <form id="appointment-form">
+                <input type="text" id="selected-date" name="selected_date" readonly>
+                <input type="text" id="selected-time" name="selected_time" readonly>
+                <input type="text" name="name" placeholder="Your Name" required>
+                <input type="email" name="email" placeholder="Your Email" required>
+                <input type="text" name="phone" placeholder="Your Phone Number" required>
+                <button type="submit">Submit</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Flatpickr JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+    <script>
+        $(document).ready(function () {
+            // Step 1: Initialize Flatpickr
+            flatpickr("#booking-calendar", {
+                inline: true,
+                minDate: "today",
+                onChange: function (selectedDates, dateStr) {
+                    // Show time slots when a date is selected
+                    $(".flatpickr-calendar").hide();
+                    $("#selected-date").val(dateStr); // Update hidden input
+                    $("#time-slots").show();
+                    loadTimeSlots(dateStr);
+                }
+            });
+
+            // Step 2: Load Time Slots Dynamically
+            function loadTimeSlots(date) {
+                // Dummy time slots
+                const timeSlots = [
+                    "8:00 AM", "9:00 AM", "10:00 AM",
+                    "11:00 AM", "12:00 PM", "1:00 PM",
+                    "2:00 PM", "3:00 PM", "4:00 PM"
+                ];
+
+                // Clear old time slots
+                $("#time-slot-container").empty();
+
+                // Render new time slots
+                timeSlots.forEach(slot => {
+                    $("#time-slot-container").append(
+                        `<div class="time-slot">${slot}</div>`
+                    );
+                });
+
+                // Add click handler to time slots
+                $(".time-slot").click(function () {
+                    $(".time-slot").removeClass("selected"); // Clear previous selection
+                    $(this).addClass("selected");
+                    $("#selected-time").val($(this).text()); // Update hidden input
+                    $(".time-slot").hide();
+                    $("#booking-form").show(); // Show booking form
+                });
+            }
+
+            // Step 3: Submit Booking Form with AJAX
+            $("#appointment-form").submit(function (e) {
+                e.preventDefault(); // Prevent default form submission
+
+                // Get form data
+                const formData = $(this).serialize();
+
+                // Send AJAX request to WordPress
+                $.ajax({
+                    url: "/wp-admin/admin-ajax.php", // Adjust to match your WordPress setup
+                    type: "POST",
+                    data: {
+                        action: "submit_booking", // Custom action for WordPress
+                        form_data: formData
+                    },
+                    success: function (response) {
+                        alert("Booking successful! We'll get in touch with you shortly.");
+                        console.log(response);
+                        location.reload(); // Reload the page or clear the form
+                    },
+                    error: function (error) {
+                        alert("An error occurred. Please try again.");
+                        console.error(error);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
